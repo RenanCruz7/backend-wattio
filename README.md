@@ -107,6 +107,15 @@ Executar toda a suite:
 uv run pytest
 ```
 
+## CI
+
+O projeto possui pipeline em `GitHub Actions` definida em `.github/workflows/ci.yml`.
+
+Ela executa em `push`, `pull_request` e manualmente via `workflow_dispatch`, validando:
+
+- suite de testes com `uv`, `PostgreSQL` e `alembic upgrade head`
+- build da imagem Docker com `docker build`
+
 ## Migrations
 
 Gerar e aplicar migrations:
