@@ -64,7 +64,7 @@ Observacao:
 ### 1. Instalar dependencias
 
 ```bash
-uv sync --dev
+uv sync --extra dev
 ```
 
 ### 2. Configurar ambiente
