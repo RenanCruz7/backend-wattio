@@ -19,7 +19,8 @@ API REST de filmes desenvolvida com `FastAPI`, `SQLAlchemy`, `PostgreSQL`, `Alem
 - `GET /filmes` com `page` e `page_size`
 - `POST /filmes`
 - `GET /filmes/{id}`
-- `PUT /filmes/{id}`
+- `PUT /filmes/{id}` para substituicao completa
+- `PATCH /filmes/{id}` para atualizacao parcial
 - `DELETE /filmes/{id}`
 
 ## Tecnologias

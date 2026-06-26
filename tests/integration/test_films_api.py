@@ -185,6 +185,57 @@ async def test_put_filmes_updates_record(client: AsyncClient) -> None:
     film_id = create_response.json()["id"]
     response = await client.put(
         f"/filmes/{film_id}",
+        json={
+            "title": "Blade Runner 2049",
+            "director": "Denis Villeneuve",
+            "year": 2017,
+            "genre": "Sci-Fi",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["title"] == "Blade Runner 2049"
+    assert response.json()["year"] == 2017
+    assert response.json()["director"] == "Denis Villeneuve"
+    assert response.json()["genre"] == "Sci-Fi"
+
+
+@pytest.mark.anyio
+async def test_put_filmes_requires_complete_payload(client: AsyncClient) -> None:
+    create_response = await client.post(
+        "/filmes",
+        json={
+            "title": "Alien",
+            "director": "Ridley Scott",
+            "year": 1979,
+            "genre": "Sci-Fi",
+        },
+    )
+
+    film_id = create_response.json()["id"]
+    response = await client.put(
+        f"/filmes/{film_id}",
+        json={"title": "Alien Remastered", "year": 2003},
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_patch_filmes_updates_record_partially(client: AsyncClient) -> None:
+    create_response = await client.post(
+        "/filmes",
+        json={
+            "title": "Alien",
+            "director": "Ridley Scott",
+            "year": 1979,
+            "genre": "Sci-Fi",
+        },
+    )
+
+    film_id = create_response.json()["id"]
+    response = await client.patch(
+        f"/filmes/{film_id}",
         json={"title": "Alien Remastered", "year": 2003},
     )
 

@@ -60,6 +60,32 @@ def test_service_creates_film(service: FilmService) -> None:
     assert film.title == "Alien"
 
 
+def test_service_replaces_existing_film(service: FilmService) -> None:
+    created_film = service.create_film(
+        FilmCreate(
+            title="Alien",
+            director="Ridley Scott",
+            year=1979,
+            genre="Sci-Fi",
+        )
+    )
+
+    replaced_film = service.replace_film(
+        created_film.id,
+        FilmCreate(
+            title="Blade Runner",
+            director="Denis Villeneuve",
+            year=2017,
+            genre="Neo-Noir",
+        ),
+    )
+
+    assert replaced_film.title == "Blade Runner"
+    assert replaced_film.director == "Denis Villeneuve"
+    assert replaced_film.year == 2017
+    assert replaced_film.genre == "Neo-Noir"
+
+
 def test_service_lists_films(service: FilmService) -> None:
     service.create_film(
         FilmCreate(
@@ -144,7 +170,7 @@ def test_service_raises_for_missing_film(service: FilmService) -> None:
     assert exc_info.value.film_id == 999
 
 
-def test_service_updates_existing_film(service: FilmService) -> None:
+def test_service_patches_existing_film(service: FilmService) -> None:
     created_film = service.create_film(
         FilmCreate(
             title="Alien",
@@ -154,7 +180,7 @@ def test_service_updates_existing_film(service: FilmService) -> None:
         )
     )
 
-    updated_film = service.update_film(
+    updated_film = service.patch_film(
         created_film.id,
         FilmUpdate(title="Alien Remastered", year=2003),
     )
@@ -163,7 +189,7 @@ def test_service_updates_existing_film(service: FilmService) -> None:
     assert updated_film.year == 2003
 
 
-def test_service_returns_existing_film_when_update_payload_is_empty(
+def test_service_returns_existing_film_when_patch_payload_is_empty(
     service: FilmService,
 ) -> None:
     created_film = service.create_film(
@@ -175,7 +201,7 @@ def test_service_returns_existing_film_when_update_payload_is_empty(
         )
     )
 
-    same_film = service.update_film(created_film.id, FilmUpdate())
+    same_film = service.patch_film(created_film.id, FilmUpdate())
 
     assert same_film.id == created_film.id
     assert same_film.title == "Alien"

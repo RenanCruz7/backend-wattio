@@ -41,13 +41,17 @@ class FilmService:
     def create_film(self, payload: FilmCreate) -> Film:
         return self.repository.create(payload.model_dump())
 
+    def replace_film(self, film_id: int, payload: FilmCreate) -> Film:
+        film = self.get_film_by_id(film_id)
+        return self.repository.update(film, payload.model_dump())
+
     def get_film_by_id(self, film_id: int) -> Film:
         film = self.repository.get_by_id(film_id)
         if film is None:
             raise FilmNotFoundError(film_id)
         return film
 
-    def update_film(self, film_id: int, payload: FilmUpdate) -> Film:
+    def patch_film(self, film_id: int, payload: FilmUpdate) -> Film:
         film = self.get_film_by_id(film_id)
         update_data = payload.model_dump(exclude_none=True)
 
