@@ -18,7 +18,7 @@ API REST de filmes desenvolvida com `FastAPI`, `SQLAlchemy`, `PostgreSQL`, `Alem
 - `GET /health`
 - `GET /health/live`
 - `GET /health/ready`
-- `GET /filmes` com `page` e `page_size`
+- `GET /filmes` com `page`, `page_size`, filtros e ordenacao
 - `POST /filmes`
 - `GET /filmes/{id}`
 - `PUT /filmes/{id}` para substituicao completa
@@ -144,6 +144,22 @@ alembic/
 - `GET /health/live`: verifica se o processo da API esta vivo
 - `GET /health/ready`: verifica se a API esta pronta, incluindo conexao com o banco
 - `GET /health`: retorna a visao agregada da aplicacao e pode responder `503` quando o banco estiver indisponivel
+
+## Listagem de filmes
+
+`GET /filmes` suporta:
+
+- paginacao com `page` e `page_size`
+- filtro por `title`
+- filtro por `genre`
+- filtro por `year`
+- ordenacao com `sort_by=created_at|title|year`
+- ordenacao com `sort_order=asc|desc` (padrao: `asc`)
+
+Comportamento da paginacao:
+
+- quando nao houver registros, `total_pages` sera `0`
+- quando a pagina solicitada ultrapassar a ultima pagina disponivel, `items` sera retornado vazio
 
 ## Fluxo sugerido para avaliacao
 

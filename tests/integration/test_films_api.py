@@ -36,10 +36,6 @@ async def client(
         session = session_factory()
         try:
             yield session
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
         finally:
             session.close()
 
@@ -140,6 +136,65 @@ async def test_get_filmes_supports_pagination(client: AsyncClient) -> None:
     assert response.json()["total_items"] == 3
     assert response.json()["total_pages"] == 2
     assert [film["title"] for film in response.json()["items"]] == ["The Martian"]
+
+
+@pytest.mark.anyio
+async def test_get_filmes_returns_empty_items_when_page_exceeds_total_pages(
+    client: AsyncClient,
+) -> None:
+    await client.post(
+        "/filmes",
+        json={
+            "title": "Alien",
+            "director": "Ridley Scott",
+            "year": 1979,
+            "genre": "Sci-Fi",
+        },
+    )
+
+    response = await client.get("/filmes?page=2&page_size=1")
+
+    assert response.status_code == 200
+    assert response.json()["items"] == []
+    assert response.json()["total_items"] == 1
+    assert response.json()["total_pages"] == 1
+
+
+@pytest.mark.anyio
+async def test_get_filmes_supports_filters_and_sorting(client: AsyncClient) -> None:
+    await client.post(
+        "/filmes",
+        json={
+            "title": "Alien",
+            "director": "Ridley Scott",
+            "year": 1979,
+            "genre": "Sci-Fi",
+        },
+    )
+    await client.post(
+        "/filmes",
+        json={
+            "title": "Blade Runner",
+            "director": "Ridley Scott",
+            "year": 1982,
+            "genre": "Sci-Fi",
+        },
+    )
+    await client.post(
+        "/filmes",
+        json={
+            "title": "Gladiator",
+            "director": "Ridley Scott",
+            "year": 2000,
+            "genre": "Drama",
+        },
+    )
+
+    response = await client.get("/filmes?genre=sci&title=e&sort_by=year&sort_order=asc")
+
+    assert response.status_code == 200
+    assert response.json()["total_items"] == 2
+    assert [film["title"] for film in response.json()["items"]] == ["Alien", "Blade Runner"]
 
 
 @pytest.mark.anyio

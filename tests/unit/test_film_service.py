@@ -11,12 +11,36 @@ class FakeFilmRepository:
     def __init__(self) -> None:
         self.films: dict[int, Film] = {}
         self.next_id = 1
+        self.commit_calls = 0
+        self.rollback_calls = 0
 
-    def count(self) -> int:
-        return len(self.films)
+    def count(self, *, title: str | None = None, genre: str | None = None, year: int | None = None) -> int:
+        return len(self.list(title=title, genre=genre, year=year, limit=10_000))
 
-    def list(self, *, offset: int = 0, limit: int = 20) -> list[Film]:
+    def list(
+        self,
+        *,
+        offset: int = 0,
+        limit: int = 20,
+        title: str | None = None,
+        genre: str | None = None,
+        year: int | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
+    ) -> list[Film]:
         ordered_films = [self.films[film_id] for film_id in sorted(self.films)]
+
+        if title:
+            ordered_films = [film for film in ordered_films if title.lower() in film.title.lower()]
+        if genre:
+            ordered_films = [film for film in ordered_films if genre.lower() in film.genre.lower()]
+        if year is not None:
+            ordered_films = [film for film in ordered_films if film.year == year]
+
+        ordered_films.sort(key=lambda film: getattr(film, sort_by))
+        if sort_order == "desc":
+            ordered_films.reverse()
+
         return ordered_films[offset : offset + limit]
 
     def create(self, data: dict[str, object]) -> Film:
@@ -40,6 +64,12 @@ class FakeFilmRepository:
     def delete(self, film: Film) -> None:
         self.films.pop(film.id, None)
 
+    def commit(self) -> None:
+        self.commit_calls += 1
+
+    def rollback(self) -> None:
+        self.rollback_calls += 1
+
 
 @pytest.fixture
 def service() -> FilmService:
@@ -58,6 +88,7 @@ def test_service_creates_film(service: FilmService) -> None:
 
     assert film.id == 1
     assert film.title == "Alien"
+    assert service.repository.commit_calls == 1
 
 
 def test_service_replaces_existing_film(service: FilmService) -> None:
@@ -84,6 +115,7 @@ def test_service_replaces_existing_film(service: FilmService) -> None:
     assert replaced_film.director == "Denis Villeneuve"
     assert replaced_film.year == 2017
     assert replaced_film.genre == "Neo-Noir"
+    assert service.repository.commit_calls == 2
 
 
 def test_service_lists_films(service: FilmService) -> None:
@@ -148,6 +180,63 @@ def test_service_lists_films_with_pagination(service: FilmService) -> None:
     assert films.total_pages == 2
 
 
+def test_service_lists_films_with_filters_and_sorting(service: FilmService) -> None:
+    service.create_film(
+        FilmCreate(
+            title="Alien",
+            director="Ridley Scott",
+            year=1979,
+            genre="Sci-Fi",
+        )
+    )
+    service.create_film(
+        FilmCreate(
+            title="Blade Runner",
+            director="Ridley Scott",
+            year=1982,
+            genre="Sci-Fi",
+        )
+    )
+    service.create_film(
+        FilmCreate(
+            title="Gladiator",
+            director="Ridley Scott",
+            year=2000,
+            genre="Drama",
+        )
+    )
+
+    films = service.list_films(title="e", genre="sci", sort_by="year", sort_order="asc")
+
+    assert [film.title for film in films.items] == ["Alien", "Blade Runner"]
+    assert films.total_items == 2
+
+
+def test_service_lists_empty_collection_with_zero_total_pages(service: FilmService) -> None:
+    films = service.list_films()
+
+    assert films.items == []
+    assert films.total_items == 0
+    assert films.total_pages == 0
+
+
+def test_service_returns_empty_items_when_page_exceeds_total_pages(service: FilmService) -> None:
+    service.create_film(
+        FilmCreate(
+            title="Alien",
+            director="Ridley Scott",
+            year=1979,
+            genre="Sci-Fi",
+        )
+    )
+
+    films = service.list_films(page=2, page_size=1)
+
+    assert films.items == []
+    assert films.total_items == 1
+    assert films.total_pages == 1
+
+
 def test_service_returns_existing_film(service: FilmService) -> None:
     created_film = service.create_film(
         FilmCreate(
@@ -187,6 +276,7 @@ def test_service_patches_existing_film(service: FilmService) -> None:
 
     assert updated_film.title == "Alien Remastered"
     assert updated_film.year == 2003
+    assert service.repository.commit_calls == 2
 
 
 def test_service_returns_existing_film_when_patch_payload_is_empty(
@@ -205,6 +295,7 @@ def test_service_returns_existing_film_when_patch_payload_is_empty(
 
     assert same_film.id == created_film.id
     assert same_film.title == "Alien"
+    assert service.repository.commit_calls == 1
 
 
 def test_service_deletes_existing_film(service: FilmService) -> None:
@@ -218,6 +309,7 @@ def test_service_deletes_existing_film(service: FilmService) -> None:
     )
 
     service.delete_film(created_film.id)
+    assert service.repository.commit_calls == 2
 
     with pytest.raises(FilmNotFoundError):
         service.get_film_by_id(created_film.id)
