@@ -12,8 +12,12 @@ class FakeFilmRepository:
         self.films: dict[int, Film] = {}
         self.next_id = 1
 
-    def list(self) -> list[Film]:
-        return [self.films[film_id] for film_id in sorted(self.films)]
+    def count(self) -> int:
+        return len(self.films)
+
+    def list(self, *, offset: int = 0, limit: int = 20) -> list[Film]:
+        ordered_films = [self.films[film_id] for film_id in sorted(self.films)]
+        return ordered_films[offset : offset + limit]
 
     def create(self, data: dict[str, object]) -> Film:
         film = Film(
@@ -76,7 +80,46 @@ def test_service_lists_films(service: FilmService) -> None:
 
     films = service.list_films()
 
-    assert [film.title for film in films] == ["Alien", "Blade Runner"]
+    assert [film.title for film in films.items] == ["Alien", "Blade Runner"]
+    assert films.page == 1
+    assert films.page_size == 20
+    assert films.total_items == 2
+    assert films.total_pages == 1
+
+
+def test_service_lists_films_with_pagination(service: FilmService) -> None:
+    service.create_film(
+        FilmCreate(
+            title="Alien",
+            director="Ridley Scott",
+            year=1979,
+            genre="Sci-Fi",
+        )
+    )
+    service.create_film(
+        FilmCreate(
+            title="Blade Runner",
+            director="Ridley Scott",
+            year=1982,
+            genre="Sci-Fi",
+        )
+    )
+    service.create_film(
+        FilmCreate(
+            title="The Martian",
+            director="Ridley Scott",
+            year=2015,
+            genre="Sci-Fi",
+        )
+    )
+
+    films = service.list_films(page=2, page_size=2)
+
+    assert [film.title for film in films.items] == ["The Martian"]
+    assert films.page == 2
+    assert films.page_size == 2
+    assert films.total_items == 3
+    assert films.total_pages == 2
 
 
 def test_service_returns_existing_film(service: FilmService) -> None:

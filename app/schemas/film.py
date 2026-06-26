@@ -52,3 +52,11 @@ class FilmResponse(FilmBase):
         if value.tzinfo is None:
             return value.replace(tzinfo=UTC)
         return value
+
+
+class FilmListResponse(BaseModel):
+    items: list[FilmResponse]
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int

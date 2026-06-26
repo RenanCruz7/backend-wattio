@@ -1,11 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.repositories.film_repository import FilmRepository
-from app.schemas.film import FilmCreate, FilmResponse, FilmUpdate
+from app.schemas.film import FilmCreate, FilmListResponse, FilmResponse, FilmUpdate
 from app.services.film_service import FilmNotFoundError, FilmService
 
 router = APIRouter(prefix="/filmes")
@@ -21,9 +21,20 @@ def get_film_service(session: DbSession) -> FilmService:
 FilmServiceDependency = Annotated[FilmService, Depends(get_film_service)]
 
 
-@router.get("", response_model=list[FilmResponse])
-def list_films(service: FilmServiceDependency) -> list[FilmResponse]:
-    return [FilmResponse.model_validate(film) for film in service.list_films()]
+@router.get("", response_model=FilmListResponse)
+def list_films(
+    service: FilmServiceDependency,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+) -> FilmListResponse:
+    paginated_films = service.list_films(page=page, page_size=page_size)
+    return FilmListResponse(
+        items=[FilmResponse.model_validate(film) for film in paginated_films.items],
+        page=paginated_films.page,
+        page_size=paginated_films.page_size,
+        total_items=paginated_films.total_items,
+        total_pages=paginated_films.total_pages,
+    )
 
 
 @router.post("", response_model=FilmResponse, status_code=status.HTTP_201_CREATED)

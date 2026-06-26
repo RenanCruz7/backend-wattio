@@ -1,37 +1,146 @@
 ![WATTIO](http://wattio.com.br/web/image/1204-212f47c3/Logo%20Wattio.png)
 
-#### Descrição
+# Backend Wattio
 
-O desafio consiste em implementar um CRUD de filmes, utilizando [python](https://www.python.org/ "python") integrando com uma API REST e uma possível persistência de dados.
+API REST de filmes desenvolvida com `FastAPI`, `SQLAlchemy`, `PostgreSQL`, `Alembic`, `uv` e `Docker`.
 
-Rotas da API:
+## Funcionalidades
 
- - `/filmes` - [GET] deve retornar todos os filmes cadastrados.
- - `/filmes` - [POST] deve cadastrar um novo filme.
- - `/filmes/{id}` -  [GET] deve retornar o filme com ID especificado.
+- CRUD completo de filmes
+- documentacao automatica com FastAPI
+- persistencia em PostgreSQL
+- migrations com Alembic
+- testes unitarios e de integracao
+- execucao com `docker compose up --build`
 
-O Objetivo é te desafiar e reconhecer seu esforço para aprender e se adaptar. Qualquer código enviado, ficaremos muito felizes e avaliaremos com toda atenção!
+## Rotas
 
-#### Sugestão de Ferramentas 
-Não é obrigatório utilizar todas as as tecnologias sugeridas, mas será um diferencial =]
+- `GET /health`
+- `GET /filmes` com `page` e `page_size`
+- `POST /filmes`
+- `GET /filmes/{id}`
+- `PUT /filmes/{id}`
+- `DELETE /filmes/{id}`
 
-- Orientação a objetos (utilizar objetos, classes para manipular os filmes)
-- [FastAPI](https://fastapi.tiangolo.com/) (API com documentação auto gerada)
-- [Docker](https://www.docker.com/) / [Docker-compose](https://docs.docker.com/compose/install/) (Aplicação deverá ficar em um container docker, e o start deverá seer com o comando ``` docker-compose up ```
-- Integração com banco de dados (persistir as informações em json (iniciante) /[SqLite](https://www.sqlite.org/index.html) / [SQLAlchemy](https://fastapi.tiangolo.com/tutorial/sql-databases/#sql-relational-databases) / outros DB)
+## Tecnologias
 
+- `Python 3.12`
+- `uv`
+- `FastAPI`
+- `SQLAlchemy 2`
+- `PostgreSQL`
+- `Alembic`
+- `Pytest`
+- `HTTPX`
+- `Docker`
+- `Docker Compose`
 
-#### Como começar?
+## Como executar com Docker
 
-- Fork do repositório
-- Criar branch com seu nome ``` git checkout -b feature/ana ```
-- Faça os commits de suas alterações ``` git commit -m "[ADD] Funcionalidade" ```
-- Envie a branch para seu repositório ``` git push origin feature/ana ```
-- Navegue até o [Github](https://github.com/), crie seu Pull Request apontando para a branch **```main```**
-- Atualize o README.md descrevendo como subir sua aplicação
+O modo mais simples de subir o projeto e usando Docker:
 
-#### Dúvidas?
+```bash
+docker compose up --build
+```
 
-Qualquer dúvida / sugestão / melhoria / orientação adicional só enviar email para hendrix@wattio.com.br
+Isso sobe:
 
-Salve!
+- API em `http://localhost:8000`
+- Swagger UI em `http://localhost:8000/docs`
+- ReDoc em `http://localhost:8000/redoc`
+- Healthcheck em `http://localhost:8000/health`
+
+Observacao:
+
+- o container da API executa `alembic upgrade head` automaticamente antes de iniciar o `uvicorn`
+
+## Como executar localmente com uv
+
+### 1. Instalar dependencias
+
+```bash
+uv sync --dev
+```
+
+### 2. Configurar ambiente
+
+Use o arquivo `.env.example` como referencia.
+
+Exemplo de variaveis:
+
+```env
+APP_NAME=Wattio Films API
+APP_VERSION=0.1.0
+DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/wattio
+```
+
+### 3. Subir o banco
+
+Se quiser usar somente o PostgreSQL do compose:
+
+```bash
+docker compose up db -d
+```
+
+### 4. Rodar as migrations
+
+```bash
+uv run alembic upgrade head
+```
+
+### 5. Iniciar a API
+
+```bash
+uv run uvicorn app.main:app --reload
+```
+
+## Testes
+
+Executar toda a suite:
+
+```bash
+uv run pytest
+```
+
+## Migrations
+
+Gerar e aplicar migrations:
+
+```bash
+uv run alembic upgrade head
+uv run alembic current
+```
+
+## Estrutura do projeto
+
+```text
+app/
+  api/
+  core/
+  db/
+  models/
+  repositories/
+  schemas/
+  services/
+tests/
+  integration/
+  unit/
+alembic/
+```
+
+## Documentacao da API
+
+- `http://localhost:8000/docs`
+- `http://localhost:8000/redoc`
+- `http://localhost:8000/openapi.json`
+
+## Fluxo sugerido para avaliacao
+
+```bash
+docker compose up --build
+```
+
+Depois disso, acessar:
+
+- `http://localhost:8000/docs`
+- `http://localhost:8000/health`

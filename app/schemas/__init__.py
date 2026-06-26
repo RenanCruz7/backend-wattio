@@ -1,3 +1,3 @@
-from app.schemas.film import FilmCreate, FilmResponse, FilmUpdate
+from app.schemas.film import FilmCreate, FilmListResponse, FilmResponse, FilmUpdate
 
-__all__ = ["FilmCreate", "FilmResponse", "FilmUpdate"]
+__all__ = ["FilmCreate", "FilmListResponse", "FilmResponse", "FilmUpdate"]

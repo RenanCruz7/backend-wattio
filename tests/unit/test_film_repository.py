@@ -74,6 +74,54 @@ def test_repository_lists_films_in_id_order(session: Session) -> None:
     assert [film.title for film in films] == ["Alien", "Blade Runner"]
 
 
+def test_repository_lists_films_with_pagination(session: Session) -> None:
+    repository = FilmRepository(session)
+
+    repository.create(
+        {
+            "title": "Alien",
+            "director": "Ridley Scott",
+            "year": 1979,
+            "genre": "Sci-Fi",
+        }
+    )
+    repository.create(
+        {
+            "title": "Blade Runner",
+            "director": "Ridley Scott",
+            "year": 1982,
+            "genre": "Sci-Fi",
+        }
+    )
+
+    films = repository.list(offset=1, limit=1)
+
+    assert [film.title for film in films] == ["Blade Runner"]
+
+
+def test_repository_counts_films(session: Session) -> None:
+    repository = FilmRepository(session)
+
+    repository.create(
+        {
+            "title": "Alien",
+            "director": "Ridley Scott",
+            "year": 1979,
+            "genre": "Sci-Fi",
+        }
+    )
+    repository.create(
+        {
+            "title": "Blade Runner",
+            "director": "Ridley Scott",
+            "year": 1982,
+            "genre": "Sci-Fi",
+        }
+    )
+
+    assert repository.count() == 2
+
+
 def test_repository_updates_existing_film(session: Session) -> None:
     repository = FilmRepository(session)
     film = repository.create(

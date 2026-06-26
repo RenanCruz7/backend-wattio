@@ -95,7 +95,51 @@ async def test_get_filmes_lists_records(client: AsyncClient) -> None:
     response = await client.get("/filmes")
 
     assert response.status_code == 200
-    assert [film["title"] for film in response.json()] == ["Alien", "Blade Runner"]
+    assert response.json()["page"] == 1
+    assert response.json()["page_size"] == 20
+    assert response.json()["total_items"] == 2
+    assert response.json()["total_pages"] == 1
+    assert [film["title"] for film in response.json()["items"]] == ["Alien", "Blade Runner"]
+
+
+@pytest.mark.anyio
+async def test_get_filmes_supports_pagination(client: AsyncClient) -> None:
+    await client.post(
+        "/filmes",
+        json={
+            "title": "Alien",
+            "director": "Ridley Scott",
+            "year": 1979,
+            "genre": "Sci-Fi",
+        },
+    )
+    await client.post(
+        "/filmes",
+        json={
+            "title": "Blade Runner",
+            "director": "Ridley Scott",
+            "year": 1982,
+            "genre": "Sci-Fi",
+        },
+    )
+    await client.post(
+        "/filmes",
+        json={
+            "title": "The Martian",
+            "director": "Ridley Scott",
+            "year": 2015,
+            "genre": "Sci-Fi",
+        },
+    )
+
+    response = await client.get("/filmes?page=2&page_size=2")
+
+    assert response.status_code == 200
+    assert response.json()["page"] == 2
+    assert response.json()["page_size"] == 2
+    assert response.json()["total_items"] == 3
+    assert response.json()["total_pages"] == 2
+    assert [film["title"] for film in response.json()["items"]] == ["The Martian"]
 
 
 @pytest.mark.anyio
