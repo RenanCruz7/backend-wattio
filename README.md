@@ -16,6 +16,8 @@ API REST de filmes desenvolvida com `FastAPI`, `SQLAlchemy`, `PostgreSQL`, `Alem
 ## Rotas
 
 - `GET /health`
+- `GET /health/live`
+- `GET /health/ready`
 - `GET /filmes` com `page` e `page_size`
 - `POST /filmes`
 - `GET /filmes/{id}`
@@ -49,7 +51,9 @@ Isso sobe:
 - API em `http://localhost:8000`
 - Swagger UI em `http://localhost:8000/docs`
 - ReDoc em `http://localhost:8000/redoc`
-- Healthcheck em `http://localhost:8000/health`
+- Health agregada em `http://localhost:8000/health`
+- Liveness em `http://localhost:8000/health/live`
+- Readiness em `http://localhost:8000/health/ready`
 
 Observacao:
 
@@ -134,6 +138,12 @@ alembic/
 - `http://localhost:8000/docs`
 - `http://localhost:8000/redoc`
 - `http://localhost:8000/openapi.json`
+
+## Observabilidade basica
+
+- `GET /health/live`: verifica se o processo da API esta vivo
+- `GET /health/ready`: verifica se a API esta pronta, incluindo conexao com o banco
+- `GET /health`: retorna a visao agregada da aplicacao e pode responder `503` quando o banco estiver indisponivel
 
 ## Fluxo sugerido para avaliacao
 
